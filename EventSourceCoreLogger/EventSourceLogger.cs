@@ -2,37 +2,31 @@
 using System.Diagnostics.Tracing;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Microsoft.Extensions.Logging.Abstractions.Internal;
 
 namespace EventSourceCoreLogger
 {
     [EventSource(Name = "EventSourceLogger")]
-    public class EventSourceLogger :EventSource, ILogger
+    public class EventSourceLogger : EventSource, ILogger
     {
-        private static readonly Lazy<EventSourceLogger> eventSourceLogger =
+        private static readonly Lazy<EventSourceLogger> Instance =
             new Lazy<EventSourceLogger>(() => new EventSourceLogger());
 
-        public static EventSourceLogger Instance => eventSourceLogger.Value;
+        public static EventSourceLogger Logger => Instance.Value;
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
             List<Exception> exceptions = null;
             try
             {
+
                 var message = formatter(state, exception);
-                WriteEvent(logLevel.GetHashCode(), message, exception);
+                WriteEvent(1, message);
             }
             catch (Exception ex)
             {
-                if (exceptions == null)
-                {
-                    exceptions = new List<Exception>();
-                }
-
-                exceptions.Add(ex);
+                exceptions = new List<Exception> { ex };
             }
-
 
             if (exceptions != null && exceptions.Count > 0)
             {
